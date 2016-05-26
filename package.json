@@ -1,5 +1,5 @@
 {
-  "name": "nodejs_aa6tests",
+  "name": "nodejs_fuse_tests",
   "version": "0.0.1",
   "description": "Some demonstrative tests for various arbitrary cases I'm interested in",
   "main": "index.js",
@@ -8,14 +8,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/aa6/nodejs_aa6tests.git"
+    "url": "git+https://github.com/aa6/nodejs_fuse_tests.git"
   },
   "author": "aa6",
   "license": "AGPL-3.0",
   "bugs": {
-    "url": "https://github.com/aa6/nodejs_aa6tests/issues"
+    "url": "https://github.com/aa6/nodejs_fuse_tests/issues"
   },
-  "homepage": "https://github.com/aa6/nodejs_aa6tests#readme",
+  "homepage": "https://github.com/aa6/nodejs_fuse_tests#readme",
   "devDependencies": {
     "jasmine" : "latest",
     "fs-extra" : "latest",
