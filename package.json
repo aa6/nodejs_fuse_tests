@@ -1,0 +1,26 @@
+{
+  "name": "nodejs_aa6tests",
+  "version": "0.0.1",
+  "description": "Some demonstrative tests for various arbitrary cases I'm interested in",
+  "main": "index.js",
+  "scripts": {
+    "test": "coffee spec/support/jasmine-runner.coffee"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aa6/nodejs_aa6tests.git"
+  },
+  "author": "aa6",
+  "license": "AGPL-3.0",
+  "bugs": {
+    "url": "https://github.com/aa6/nodejs_aa6tests/issues"
+  },
+  "homepage": "https://github.com/aa6/nodejs_aa6tests#readme",
+  "devDependencies": {
+    "jasmine" : "latest",
+    "fs-extra" : "latest",
+    "fuse-bindings": "latest",
+    "coffee-script": "latest",
+    "jasmine-spec-reporter": "latest"
+  }
+}
