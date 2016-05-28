@@ -257,7 +257,8 @@ describe "Fuse-bindings loopback read-write filesystem implementation", ->
       `cb` Callback to call after the function done it's work.
 
       **Return:**  
-      Returns values by `cb(error_code, files_array)` callback.
+      Returns values by `cb(error_code, entries_array)` callback. `entries_array` is a list of \
+      files and directories which requested `path` contains.
       """
 
     if process.env.NODE_ENV is "debug"
