@@ -215,7 +215,7 @@ describe "Fuse-bindings loopback read-write filesystem implementation", ->
 ####################################################################################################
   it "matches the preformatted description", ->
 
-    preformatted_description = fs.readFileSync("fuse-loopback-readwrite.md").toString()
+    preformatted_description = fs.readFileSync("#{testname}.md").toString()
     ERRSTR = "UNEXPECTED VALUE"
 
     generate_formatted_description = ->
@@ -223,6 +223,8 @@ describe "Fuse-bindings loopback read-write filesystem implementation", ->
       `fuse-loopback-readwrite` is a moderate-featured loopback filesystem implementation for a \
       Node.js `fuse-bindings` package. It consists of #{Object.keys(loopbackfs_instance).length} \
       functions.
+
+      This text is backed by a [test in `spec` folder](/spec/#{testname}.spec.coffee)
       ### init(cb)
       Called on filesystem initialization, prior to all other functions. #{if expectations["init \
       is called only 1 time per each mount"] then "Called only one time per each mount." else ERRSTR} \
