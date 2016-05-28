@@ -12,8 +12,8 @@ describe "Fuse-bindings loopback read-write filesystem implementation", ->
   expectations =
     "init always accept only 1 argument"                                      : undefined
     "init is called only 1 time per each mount"                               : undefined
-    "init would generate a FUSE error if pass to `cb` anything but 0"         : undefined
-    "readdir accepts 2 arguments"                                             : undefined
+    "init would NOT generate a FUSE error if pass to `cb` anything but 0"     : undefined
+    "readdir always accepts only 2 arguments"                                 : undefined
     "readdir is not called when entry doesn't exists"                         : undefined
     "readdir `path` argument always starts with a slash"                      : undefined
     "fuse implementation functions are not integrated by the `this` context"  : undefined
@@ -98,30 +98,28 @@ describe "Fuse-bindings loopback read-write filesystem implementation", ->
       100
     )
 
+  # Some tests require custom debug instance, some require none. Thus this is used when necessary.
+  default_mount_wrapper = (done,middleware) ->
+    mount_loopbackfs_debug_instance ->
+      middleware ->
+        umount_loopbackfs_debug_instance(done)
+
   # Increase test counter to separate tests from each other
   beforeEach -> test_counter++
 
-  # Mount filesystem before each test.
-  beforeEach (done) -> mount_loopbackfs_debug_instance(done)
-
-  # Umount filesystem after each test.
-  afterEach (done) -> umount_loopbackfs_debug_instance(done)
-
 ####################################################################################################
 ####################################################################################################
-  it "mounts and unmounts", (done) ->
+  it "mounts and unmounts", (done) -> default_mount_wrapper done, (done) ->
 
-    done() # Everything for this test happens in `beforeEach` and `afterEach` calls.
+    done() # Everything for this test happens in `default_mount_wrapper`.
 
 ####################################################################################################
 ####################################################################################################
-  it "performs readdir calls without throwing unexpected errors", (done) ->
+  it "performs readdir without unexpected errors", (done) -> default_mount_wrapper done, (done) ->
 
     fs.mkdirSync(looproot + "/readdirtest")
     fs.mkdirSync(looproot + "/readdirtest/dir1")
-    time.before_readdirtest_ls = new Date()
     child_process.exec "ls #{mountpoint}/readdirtest", ->
-      time.after_readdirtest_ls = new Date()
       child_process.exec "ls #{mountpoint}/nonexistantdir", ->
         verify_expectations()
 
@@ -135,10 +133,35 @@ describe "Fuse-bindings loopback read-write filesystem implementation", ->
 
 ####################################################################################################
 ####################################################################################################
+  it "performs custom init test without unexpected errors", (done) ->
+
+    try
+
+      custom_init_was_called = false
+      default_init = loopbackfs_debug_instance.init
+      loopbackfs_debug_instance.init = (cb) ->
+        loopbackfs_instance.init ->
+          custom_init_was_called = true
+          cb(fuse.ENODEV)
+
+      mount_loopbackfs_debug_instance -> umount_loopbackfs_debug_instance ->
+        loopbackfs_debug_instance.init = default_init
+        verify_expectations()
+
+      verify_expectations = ->
+        expect(custom_init_was_called).toBe(true)
+        expectations["init would NOT generate a FUSE error if pass to `cb` anything but 0"] = true
+        done()
+
+    catch err
+
+      expectations["init would NOT generate a FUSE error if pass to `cb` anything but 0"] = false
+      done()
+
+####################################################################################################
+####################################################################################################
   it "meets all the expectations precisely", ->
 
-    #                                : undefined
-    # "init would generate a FUSE error if pass to `cb` anything but 0"         : undefined
     # "readdir accepts 2 arguments"                                             : undefined
     # "readdir is not called when entry doesn't exists"                         : undefined
     # "readdir `path` argument always starts with a slash"                      : undefined
@@ -169,12 +192,27 @@ describe "Fuse-bindings loopback read-write filesystem implementation", ->
         else
           return true
 
-    # expectations["readdir accepts 2 arguments"] = eventshistory.some (event) ->
-    #   time.before_readdirtest_ls < event.date < time.after_readdirtest_ls  &&
-    #   event.path is "/readdirtest" &&
-    #   event.name is "fuse call" &&
-    #   event.fn is "readdir" &&
-    #   event.arguments.length is 2
+    expectations["readdir always accepts only 2 arguments"] = callhistory.every (call) ->
+      switch
+        when call.fn is "readdir" && call.name is "fuse call"
+          return call.args.length is 2
+        else
+          return true
+
+    expectations["readdir is not called when entry doesn't exists"] = callhistory.every (call) ->
+      switch
+        when call.fn is "readdir" && call.name is "fuse call"
+          return call.env.path isnt "/nonexistantdir"
+        else
+          return true
+
+    expectations["fuse implementation functions are not integrated by the `this` context"] = callhistory.every (call) ->
+      switch
+        when call.name is "fuse call"
+          return call.this is global
+        else
+          return true
+
 
     # # "fuse implementation functions are not integrated by the `this` context"
     # if @ is global and expectations["fuse implementation functions are not integrated by the `this` context"] isnt false
@@ -197,7 +235,8 @@ describe "Fuse-bindings loopback read-write filesystem implementation", ->
 ####################################################################################################
   it "matches the preformatted description", ->
 
-    preformatted_description = ""
+    preformatted_description = fs.readFileSync("fuse-loopback-readwrite.md").toString()
+    ERRSTR = "UNEXPECTED VALUE"
 
     generate_formatted_description = ->
       """
@@ -207,13 +246,22 @@ describe "Fuse-bindings loopback read-write filesystem implementation", ->
       #### init(cb)
       Called prior to all other functions on filesystem initialization. #{if expectations["init \
       is called only 1 time per each mount"] then "It is called only one time per each mount" else \
-      "UNEXPECTED VALUE"} #{if expectations["init always accept only 1 argument"] then "and \
-      always accepts only one input argument." else "UNEXPECTED VALUE"}
+      ERRSTR} #{if expectations["init always accept only 1 argument"] then "and always accepts \
+      only one input argument." else ERRSTR}
 
-      @param `cb` Callback to call after the function done it's work.
+      Parameters:  
+      `cb` Callback to call after the function done it's work.
+
+      Return:  
+      Init doesn't return any values and #{if expectations["init would NOT generate a FUSE error \
+      if pass to `cb` anything but 0"] then "would NOT raise any errors or exceptions if you'll \
+      pass an error code to the `cb` as an argument." else ERRSTR}
       
       #### readdir(path, cb)
       """
 
-    console.log generate_formatted_description()
-    #console.dir Object.keys(loopbackfs_instance)
+    #console.dir preformatted_description
+    #console.dir generate_formatted_description()
+    expect(
+      generate_formatted_description() is preformatted_description
+    ).toBe(true)
