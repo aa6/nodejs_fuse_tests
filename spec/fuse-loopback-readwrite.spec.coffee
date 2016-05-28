@@ -223,21 +223,21 @@ describe "Fuse-bindings loopback read-write filesystem implementation", ->
       `fuse-loopback-readwrite` is a moderate-featured loopback filesystem implementation for a \
       Node.js `fuse-bindings` package. It consists of #{Object.keys(loopbackfs_instance).length} \
       functions.
-      #### init(cb)
+      ### init(cb)
       Called on filesystem initialization, prior to all other functions. #{if expectations["init \
       is called only 1 time per each mount"] then "Called only one time per each mount." else ERRSTR} \
       #{if expectations["init always accept only 1 argument"] then "Always accepts only one \
       input argument." else ERRSTR}
 
-      Parameters:  
+      **Parameters:**  
       `cb` Callback to call after the function done it's work.
 
-      Return:  
+      **Return:**  
       Init doesn't return any values and #{if expectations["init would NOT generate a FUSE error \
       if pass to `cb` anything but 0"] then "would NOT raise any errors or exceptions if you'll \
       pass an error code to the `cb` as an argument." else ERRSTR}
       
-      #### readdir(path, cb)
+      ### readdir(path, cb)
       """
 
     if process.env.NODE_ENV is "debug"
