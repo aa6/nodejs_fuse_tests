@@ -19,4 +19,4 @@ Called when a directory is being listed. Readdir is not called if the `path` ent
 `cb` Callback to call after the function done it's work.
 
 **Return:**  
-Returns values by `cb(error_code,files_array)` callback.
+Returns values by `cb(error_code, files_array)` callback.
