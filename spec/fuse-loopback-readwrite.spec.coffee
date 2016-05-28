@@ -162,11 +162,6 @@ describe "Fuse-bindings loopback read-write filesystem implementation", ->
 ####################################################################################################
   it "meets all the expectations precisely", ->
 
-    # "readdir accepts 2 arguments"                                             : undefined
-    # "readdir is not called when entry doesn't exists"                         : undefined
-    # "readdir `path` argument always starts with a slash"                      : undefined
-    # "fuse implementation functions are not integrated by the `this` context"  : undefined
-
     expectations["init always accept only 1 argument"] = callhistory.every (call) ->
       switch
         when call.fn is "init" && call.name is "fuse call"
@@ -213,21 +208,6 @@ describe "Fuse-bindings loopback read-write filesystem implementation", ->
         else
           return true
 
-
-    # # "fuse implementation functions are not integrated by the `this` context"
-    # if @ is global and expectations["fuse implementation functions are not integrated by the `this` context"] isnt false
-    #   expectations["fuse implementation functions are not integrated by the `this` context"] = true
-    # else
-    #   expectations["fuse implementation functions are not integrated by the `this` context"] = false
-
-    # # "init is called only 1 time per each mount"
-    # expectations["init is called only 1 time per each mount"] = 
-    #   if expectations["init is called only 1 time per each mount"]? then false else true
-    # expectations["readdir is not called when entry doesn't exists"] = !callhistory.some (event) ->
-    #   event.fn is "readdir" &&
-    #   event.test is test_counter &&
-    #   event.path is "/nonexistantdir"
-
     for key, val of expectations
       expect([key,val]).toEqual([key,true])
 
@@ -244,10 +224,10 @@ describe "Fuse-bindings loopback read-write filesystem implementation", ->
       Node.js `fuse-bindings` package. It consists of #{Object.keys(loopbackfs_instance).length} \
       functions.
       #### init(cb)
-      Called prior to all other functions on filesystem initialization. #{if expectations["init \
-      is called only 1 time per each mount"] then "It is called only one time per each mount" else \
-      ERRSTR} #{if expectations["init always accept only 1 argument"] then "and always accepts \
-      only one input argument." else ERRSTR}
+      Called on filesystem initialization, prior to all other functions. #{if expectations["init \
+      is called only 1 time per each mount"] then "Called only one time per each mount." else ERRSTR} \
+      #{if expectations["init always accept only 1 argument"] then "Always accepts only one \
+      input argument." else ERRSTR}
 
       Parameters:  
       `cb` Callback to call after the function done it's work.
@@ -260,8 +240,12 @@ describe "Fuse-bindings loopback read-write filesystem implementation", ->
       #### readdir(path, cb)
       """
 
-    #console.dir preformatted_description
-    #console.dir generate_formatted_description()
+    if process.env.NODE_ENV is "debug"
+      console.dir preformatted_description
+      console.dir generate_formatted_description()
+      console.log "---------"
+      console.log generate_formatted_description()
+
     expect(
       generate_formatted_description() is preformatted_description
     ).toBe(true)
