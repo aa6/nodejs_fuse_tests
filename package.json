@@ -19,9 +19,9 @@
   "devDependencies": {
     "jasmine" : "latest",
     "fs-extra" : "latest",
-    "microtime" : "latest",
     "fuse-bindings": "latest",
     "coffee-script": "latest",
+    "microtime-nodejs" : "latest",
     "jasmine-spec-reporter": "latest"
   }
 }

@@ -1,6 +1,6 @@
 [ fs, fuse, path, child_process, loopbackfs, domain, microtime ] = [ 
   (require "fs-extra"),(require "fuse-bindings"),(require "path"),(require "child_process"),
-  (require "../fuse-loopback-readwrite.coffee"),(require "domain"),(require "microtime")
+  (require "../fuse-loopback-readwrite.coffee"),(require "domain"),(require "microtime-nodejs")
 ]
 ####################################################################################################
 ####################################################################################################
