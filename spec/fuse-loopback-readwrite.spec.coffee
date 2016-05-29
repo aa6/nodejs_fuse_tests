@@ -10,6 +10,7 @@ describe "Fuse-bindings loopback read-write filesystem implementation", ->
   looproot = "data/#{testname}-looproot"
   mountpoint = "data/#{testname}-mountpoint"
   expectations =
+    #"init is called prior to all other functions"                             : undefined
     "init always accept only 1 argument"                                      : undefined
     "init is called only 1 time per each mount"                               : undefined
     "init would NOT generate a FUSE error if pass to `cb` anything but 0"     : undefined
@@ -19,7 +20,8 @@ describe "Fuse-bindings loopback read-write filesystem implementation", ->
     "readdir is always preceded with gettattr call"                           : undefined
     "readdir could be called on nonexistant entries under some circumstances" : undefined
     "readdir returns weird stuff to `fs.readdir` when called on nonexistant"  : undefined
-    #"readdir returns empty array if entries_list is null or undefined" : undefined
+    "readdir returns empty array if entries_list is undefined"                : undefined
+    "readdir returns empty array if entries_list is null"                     : undefined
     "fuse implementation functions are not integrated by the `this` context"  : undefined
   callhistory = []
   test_counter = 0
@@ -296,6 +298,52 @@ describe "Fuse-bindings loopback read-write filesystem implementation", ->
 
 ####################################################################################################
 ####################################################################################################
+  it "performs custom readdir test without unexpected errors", (done) ->
+
+    default_readdir = loopbackfs_debug_instance.readdir
+    loopbackfs_debug_instance.readdir = (path,cb) ->
+      cb(0,undefined)
+
+    readdir_result = undefined
+    mount_loopbackfs_debug_instance -> 
+      fs.readdir "#{mountpoint}/", (err, files) ->
+        expect(err).toBe(null)
+        expect(files).toEqual([])
+        readdir_result = { err: err, files: files }
+        umount_loopbackfs_debug_instance ->
+          loopbackfs_debug_instance.readdir = default_readdir
+          verify_expectations()
+
+    verify_expectations = ->
+      expectations["readdir returns empty array if entries_list is undefined"] = 
+        readdir_result.err is null && "#{readdir_result.files}" is "#{[]}"
+      done()
+
+####################################################################################################
+####################################################################################################
+  it "performs another custom readdir test without unexpected errors", (done) ->
+
+    default_readdir = loopbackfs_debug_instance.readdir
+    loopbackfs_debug_instance.readdir = (path,cb) ->
+      cb(0,null)
+
+    readdir_result = undefined
+    mount_loopbackfs_debug_instance -> 
+      fs.readdir "#{mountpoint}/", (err, files) ->
+        expect(err).toBe(null)
+        expect(files).toEqual([])
+        readdir_result = { err: err, files: files }
+        umount_loopbackfs_debug_instance ->
+          loopbackfs_debug_instance.readdir = default_readdir
+          verify_expectations()
+
+    verify_expectations = ->
+      expectations["readdir returns empty array if entries_list is null"] = 
+        readdir_result.err is null && "#{readdir_result.files}" is "#{[]}"
+      done()
+
+####################################################################################################
+####################################################################################################
   it "meets all the expectations precisely", ->
 
     expectations["init always accept only 1 argument"] = callhistory.every (call) ->
@@ -387,11 +435,10 @@ describe "Fuse-bindings loopback read-write filesystem implementation", ->
     preformatted_description = fs.readFileSync("#{testname}.md").toString()
     ERRSTR = "UNEXPECTED VALUE"
 
-    #   
     generate_formatted_description = ->
       """
-      [`fuse-loopback-readwrite`](/#{testname}.coffee) is a moderate-featured loopback filesystem \
-      linux-only implementation for a Node.js [`fuse-bindings`](https://github.com/mafintosh/fuse-\
+      [`fuse-loopback-readwrite`](/#{testname}.coffee) is a moderate-featured loopback linux-only \
+      filesystem implementation for a Node.js [`fuse-bindings`](https://github.com/mafintosh/fuse-\
       bindings) package. It consists of #{Object.keys(loopbackfs_instance).length} functions. #{if \
       expectations["fuse implementation functions are not integrated by the `this` context"] then \
       "The functions are not binded upon mounting into some class instance and `this` by default \
@@ -413,6 +460,8 @@ describe "Fuse-bindings loopback read-write filesystem implementation", ->
       if pass to `cb` anything but 0"] then "would NOT raise any errors or exceptions if you'll \
       pass an error code to the `cb` as an argument." else ERRSTR}
       
+      ### getattr
+
       ### readdir(path, cb)
       Called when a directory is being listed. #{if expectations["readdir always accepts only 2 \
       arguments"] then "Always accepts only two input arguments." else ERRSTR} #{if expectations["\
@@ -433,8 +482,11 @@ describe "Fuse-bindings loopback read-write filesystem implementation", ->
       `cb` Callback to call after the function done it's work.
 
       **Return:**  
-      Returns values by `cb(error_code, entries_array)` callback. `entries_array` is a list of \
-      files and directories which requested `path` contains.
+      Returns values by `cb(error_code, entries_array)` callback. `entries_array` is an array of \
+      strings of entries names which requested `path` contains. #{if expectations["readdir returns \
+      empty array if entries_list is undefined"] && expectations["readdir returns empty array if \
+      entries_list is null"] then "Readdir will return empty array if `entries_array` passed to \
+      `cb` is null or undefined." else ERRSR}
       """
 
     if process.env.NODE_ENV is "debug"
