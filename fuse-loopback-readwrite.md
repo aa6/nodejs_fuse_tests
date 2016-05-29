@@ -12,7 +12,7 @@ Called on filesystem initialization, prior to all other functions. Called only o
 Init doesn't return any values and would NOT raise any errors or exceptions if you'll pass an error code to the `cb` as an argument.
 
 ### readdir(path, cb)
-Called when a directory is being listed. Readdir is not called if the `path` entry wasn't listed by parent directory readdir call (if the entry doesn't exists). Always accepts only two input arguments.
+Called when a directory is being listed. Always accepts only two input arguments. Always preceded with a `gettattr` call. Readdir is not called if the `path` entry wasn't listed by parent directory readdir call or preceding `getattr` returned an error (in common - if the entry doesn't exists). However it is possible to simulate the situation when `readdir` is called on a nonexistant entry but in that case error is ignored (possible bug) and `entries_array` is returned instead.
 
 **Parameters:**  
 `path` Path to a file within the FUSE filesystem. Path is always starts with a directory separator (slash).  
