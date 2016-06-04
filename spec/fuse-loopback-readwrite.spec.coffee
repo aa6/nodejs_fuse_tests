@@ -568,7 +568,7 @@ describe "Fuse-bindings loopback read-write filesystem implementation", ->
       collisions, by identifying users (and groups) in protocol packets using "user@domain" \
       names rather than integer numbers, at the expense of additional translation steps.
 
-      `gid`: <Int>. File owner group identifier (GID). A unique positive integer assigned by an \
+      `gid`: \\<Int\\>. File owner group identifier (GID). A unique positive integer assigned by an \
       operating system to each group. Each group is identified to the system by its GID, and group \
       names are generally used only as an interface for humans. Many Linux systems reserve the GID \
       number range 0 to 99 for statically allocated groups, and either 100−499 or 100−999 for \
