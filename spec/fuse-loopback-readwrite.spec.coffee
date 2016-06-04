@@ -504,23 +504,23 @@ describe "Fuse-bindings loopback read-write filesystem implementation", ->
       `0` means no errors. `stat_data` is an object similar to the one returned in node's \
       `fs.stat(path, cb)` and must contain next properties:
 
-      `mtime`: <Date object>. Modification time. Indicates the time the contents of the file has \
-      been changed. Only the contents. Not the attributes. For instance, if you open a file and \
-      change some (or all) of its content, its mtime gets updated. If you change a file's \
+      `mtime`: \\<Date object\\>. Modification time. Indicates the time the contents of the file \
+      has been changed. Only the contents. Not the attributes. For instance, if you open a file \
+      and change some (or all) of its content, its mtime gets updated. If you change a file's \
       attribute (like read-write permissions, metadata), its mtime doesn't change, but ctime will.
 
-      `atime`: <Date object>. Access time. Indicates the time that a file has been accessed. Any \
-      operation performed on the file changes access time.
+      `atime`: \\<Date object\\>. Access time. Indicates the time that a file has been accessed. \
+      Any operation performed on the file changes access time.
 
-      `ctime`: <Date object>. Change time. Whenever anything about a file changes (except its \
+      `ctime`: \\<Date object\\>. Change time. Whenever anything about a file changes (except its \
       access time), its ctime changes.
 
-      `size`: <Int>. Size in bytes. As long as directory is just a special type of file \
+      `size`: \\<Int\\>. Size in bytes. As long as directory is just a special type of file \
       which contains list of names and inodes, the concept of size is also applicable to it and \
       the directory size implies the size of the directory file itself and not the number of items \
       in the list or something else.
 
-      `mode`: <Int>. Mode flags. A bit field containing file type, file access (SUID/SGID) and \
+      `mode`: \\<Int\\>. Mode flags. A bit field containing file type, file access (SUID/SGID) and \
       file permissions flags. The flags can be obtained through Node.js `require('constants')` \
       module. Flags values are defined in `stat.h` linux header file. Most common flags are:
 
@@ -550,7 +550,7 @@ describe "Fuse-bindings loopback read-write filesystem implementation", ->
       `S_IWOTH`  | 0b0000000000000010 | Others permission to write bitmask.
       `S_IXOTH`  | 0b0000000000000001 | Others permission to execute bitmask.
 
-      `uid`: <Int>. File owner identifier (UID). A unique positive integer assigned by an \
+      `uid`: \\<Int\\>. File owner identifier (UID). A unique positive integer assigned by an \
       operating system to each user. Each user is identified to the system by its UID, and user \
       names are generally used only as an interface for humans.  
       The Linux Standard Base Core Specification specifies that UID values in the range 0 to 99 \
@@ -568,12 +568,12 @@ describe "Fuse-bindings loopback read-write filesystem implementation", ->
       collisions, by identifying users (and groups) in protocol packets using "user@domain" \
       names rather than integer numbers, at the expense of additional translation steps.
 
-      `gid`: \\<Int\\>. File owner group identifier (GID). A unique positive integer assigned by an \
-      operating system to each group. Each group is identified to the system by its GID, and group \
-      names are generally used only as an interface for humans. Many Linux systems reserve the GID \
-      number range 0 to 99 for statically allocated groups, and either 100−499 or 100−999 for \
-      groups dynamically allocated by the system in post-installation scripts. These ranges are \
-      often specified in `/etc/login.defs`, for `useradd`, `groupadd` and similar tools.
+      `gid`: \\<Int\\>. File owner group identifier (GID). A unique positive integer assigned by \
+      an operating system to each group. Each group is identified to the system by its GID, and \
+      group names are generally used only as an interface for humans. Many Linux systems reserve \
+      the GID number range 0 to 99 for statically allocated groups, and either 100−499 or 100−999 \
+      for groups dynamically allocated by the system in post-installation scripts. These ranges \
+      are often specified in `/etc/login.defs`, for `useradd`, `groupadd` and similar tools.
 
       ### readdir(path, cb)
       Called when a directory is being listed. #{if expectations["readdir always accepts only 2 \
