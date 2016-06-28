@@ -1,6 +1,6 @@
 {
   "name": "nodejs_fuse_tests",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Some demonstrative tests for various arbitrary cases I'm interested in",
   "main": "index.js",
   "scripts": {
@@ -17,8 +17,9 @@
   },
   "homepage": "https://github.com/aa6/nodejs_fuse_tests#readme",
   "devDependencies": {
-    "jasmine" : "latest",
-    "fs-extra" : "latest",
+    "jasmine": "latest",
+    "fs-extra": "latest",
+    "coffee-line": "latest",
     "fuse-bindings": "latest",
     "coffee-script": "latest",
     "microtime-nodejs" : "latest",
