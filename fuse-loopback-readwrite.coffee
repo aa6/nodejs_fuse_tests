@@ -25,7 +25,7 @@ module.exports = ({
 
   readdir: (path, cb) ->
     fs.readdir (root + path), (err, result) ->
-      switch true
+      switch
         when !err
           cb(0,result)
         when fuse[err.code]?
@@ -35,7 +35,7 @@ module.exports = ({
 
   getattr: (path, cb) ->
     fs.lstat (root + path), (err, result) ->
-      switch true
+      switch
         when !err
           cb(0,result)
         when fuse[err.code]?
@@ -45,7 +45,7 @@ module.exports = ({
 
   fgetattr: (path, fd, cb) ->
     fs.fstat fds[fd], (err, result) ->
-      switch true
+      switch
         when !err
           cb(0,result)
         when fuse[err.code]?
@@ -59,7 +59,7 @@ module.exports = ({
     cb(fuse.ENOSYS) unless mode?
     fs.open path, mode, (err, result_fd) ->
       fds[return_fd = ++fds.counter] = result_fd
-      switch true
+      switch
         when !err
           cb(0,return_fd)
         when fuse[err.code]?
@@ -69,7 +69,7 @@ module.exports = ({
 
   read: (path, fd, buf, len, pos, cb) ->
     fs.read fds[fd], buf, len, pos, (err, bytes_read, buf) ->
-      switch true
+      switch
         when !err
           cb(bytes_read)
         else
@@ -77,7 +77,7 @@ module.exports = ({
 
   fsync: (path, fd, datasync, cb) ->
     fs.fsync fds[fd], (err) ->
-      switch true
+      switch
         when !err
           cb(0)
         when fuse[err.code]?
@@ -87,7 +87,7 @@ module.exports = ({
 
   truncate: (path, len, cb) ->
     fs.truncate path, len, (err) ->
-      switch true
+      switch
         when !err
           cb(0)
         when fuse[err.code]?
@@ -97,7 +97,7 @@ module.exports = ({
 
   ftruncate: (path, fd, size, cb) ->
     fs.ftruncate fds[fd], len, (err) ->
-      switch true
+      switch
         when !err
           cb(0)
         when fuse[err.code]?
@@ -107,7 +107,7 @@ module.exports = ({
 
   readlink: (path, cb) ->
     fs.readlink path, (err, result) ->
-      switch true
+      switch
         when !err
           cb(0,result)
         when fuse[err.code]?
@@ -117,7 +117,7 @@ module.exports = ({
 
   chown: (path, uid, gid, cb) ->
     fs.chown path, uid, gid, (err) ->
-      switch true
+      switch
         when !err
           cb(bytes_read)
         else
@@ -125,7 +125,7 @@ module.exports = ({
 
   chmod: (path, mode, cb) ->
     fs.chmod path, mode, (err) ->
-      switch true
+      switch
         when !err
           cb(bytes_read)
         else
@@ -133,7 +133,7 @@ module.exports = ({
 
   write: (path, fd, buffer, length, position, cb) ->
     fs.write fds[fd], buffer, length, position, (err, written, buffer) ->
-      switch true
+      switch
         when !err
           cb(written)
         else
@@ -141,7 +141,7 @@ module.exports = ({
 
   utimens: (path, atime, mtime, cb) ->
     fs.utimes path, atime, mtime, (err) ->
-      switch true
+      switch
         when !err
           cb(0)
         when fuse[err.code]?
@@ -151,7 +151,7 @@ module.exports = ({
 
   unlink: (path, cb) ->
     fs.unlink path, (err) ->
-      switch true
+      switch
         when !err
           cb(0)
         when fuse[err.code]?
@@ -161,7 +161,7 @@ module.exports = ({
 
   rename: (src, dest, cb) ->
     fs.rename src, dest, (err) ->
-      switch true
+      switch
         when !err
           cb(0)
         when fuse[err.code]?
@@ -172,7 +172,7 @@ module.exports = ({
   # Creates hard link.
   link: (src, dest, cb) ->
     fs.link src, dest, (err) ->
-      switch true
+      switch
         when !err
           cb(0)
         when fuse[err.code]?
@@ -182,7 +182,7 @@ module.exports = ({
 
   symlink: (src, dest, cb) ->
     fs.symlink src, dest, (err) ->
-      switch true
+      switch
         when !err
           cb(0)
         when fuse[err.code]?
@@ -192,7 +192,7 @@ module.exports = ({
 
   mkdir: (path, mode, cb) ->
     fs.mkdir path, mode, (err) ->
-      switch true
+      switch
         when !err
           cb(0)
         when fuse[err.code]?
@@ -202,7 +202,7 @@ module.exports = ({
           
   rmdir: (path, cb) ->
     fs.rmdir path, (err) ->
-      switch true
+      switch
         when !err
           cb(0)
         when fuse[err.code]?
