@@ -473,19 +473,21 @@ describe "Fuse-bindings loopback read-write filesystem implementation", ->
         for expectkey in expectkeys
           condition = condition && expectations[expectkey]
       result+= if condition then "<ins>" else "<del>"
-      result+= text + "<sup>"
+      result+= text
+      result+= if condition then "</ins>" else "</del>"
+      result+= "<sup>"
       for expectkey in expectkeys
         for line, line_number in refindex
-          if line.match(new RegExp("expectations[.#{expectkey}.]\s*="))
+          if line.match(new RegExp("expectations\\[.#{expectkey}.\\]\\s*="))
             result+= "[*](/spec/#{path.parse(__filename).base}#L#{line_number})"
       result+= "</sup>"
-      return result + if condition then ".</ins>" else ".</del>"
+      return result + "."
 
     generate_formatted_description = ->
       """
       [`fuse-loopback-readwrite`](/#{testname}.coffee) is a moderate-featured loopback linux-only \
       filesystem implementation for a Node.js [`fuse-bindings`](https://github.com/mafintosh/fuse-\
-      bindings) package. <ins>It consists of #{Object.keys(loopbackfs_instance).length} functions. \
+      bindings) package. <ins>It consists of #{Object.keys(loopbackfs_instance).length} functions.\
       </ins> #{refgen("The functions are not binded upon mounting into some class instance and \
       `this` by default points to a higher context, usually to `global`","fuse implementation \
       functions are not integrated by the `this` context")}
