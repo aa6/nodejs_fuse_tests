@@ -472,15 +472,15 @@ describe "Fuse-bindings loopback read-write filesystem implementation", ->
         condition = true
         for expectkey in expectkeys
           condition = condition && expectations[expectkey]
-      result+= if condition then "<ins>" else "<del>"
-      result+= text + "."
-      result+= if condition then "</ins>" else "</del>"
       result+= "<sup>"
       for expectkey in expectkeys
         for line, line_number in refindex
           if line.match(new RegExp("expectations\\[.#{expectkey}.\\]\\s*="))
             result+= "[*](/spec/#{path.parse(__filename).base}#L#{line_number+1})"
       result+= "</sup>"
+      result+= if condition then "" else "<del>"
+      result+= text + "."
+      result+= if condition then "" else "</del>"
       return result
 
     generate_formatted_description = ->
