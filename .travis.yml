@@ -1,7 +1,6 @@
 language: node_js
 node_js:
-  - "5" # Can't make tests work for higher node versions.
-  # - "node" # Would install latest version of node.
+  - "node" # Latest version of node.
 sudo: required
 dist: trusty
 before_install:
