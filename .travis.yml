@@ -13,4 +13,5 @@ addons:
     packages:
     - libfuse-dev
     - fuse
+    - gcc
     - g++
