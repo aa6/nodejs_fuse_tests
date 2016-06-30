@@ -1,8 +1,10 @@
 language: node_js
 node_js:
-  - "5.11.1" # Can't make tests work for higher node versions.
+  - "5" # Can't make tests work for higher node versions.
   # - "node" # Would install latest version of node.
 sudo: required
+env:
+  - CXX=g++-4.8
 before_install:
   - sudo apt-get install -qq pkg-config fuse
   - sudo modprobe fuse
@@ -13,3 +15,4 @@ addons:
     packages:
     - libfuse-dev
     - fuse
+    - g++-4.8
