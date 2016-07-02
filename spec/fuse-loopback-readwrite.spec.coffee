@@ -12,6 +12,7 @@ describe "Fuse-bindings loopback read-write filesystem implementation", ->
   mountpoint = "data/#{testname}-mountpoint"
   expectations =
     "all expectations are expected to be true"                                : true
+    "init exceptions are not catchable"                                       : undefined
     "init is called prior to all other functions"                             : undefined
     "init always accept only 1 argument"                                      : undefined
     "init is called only 1 time per each mount"                               : undefined
@@ -356,7 +357,76 @@ describe "Fuse-bindings loopback read-write filesystem implementation", ->
 
 ####################################################################################################
 ####################################################################################################
+  it "performs test for `init exceptions are catchable` case", (done) ->
+
+    process.on 'uncaughtException', uncaught_handler = (err) ->
+      callhistory.push(
+        env: { err: err }
+        name: "uncaughtException"
+        time: microtime.now()
+        args: arguments
+        testnum: test_counter
+      )
+
+    forced_lazy_umount = (done) ->
+      setTimeout(
+        ->
+          child_process.exec "fusermount -uz #{mountpoint}", (err,stdout,stderr) ->
+            expect(arguments.length).toBe(3)
+            expect(err).toBe(null)
+            expect(stdout).toBe("")
+            expect(stderr).toBe("")
+            child_process.exec "fusermount -u #{mountpoint}", (err,stdout,stderr) ->
+              expect(arguments.length).toBe(3)
+              expect(err instanceof Error).toBe(true)
+              expect(stdout).toBe("")
+              expect(stderr.indexOf("not found in /etc/mtab")).not.toBe(-1)
+              done()
+        100
+      )
+
+    unexistant_looproot = "data/#{testname}-unexistant-looproot"
+    test_instance = loopbackfs(root: unexistant_looproot)
+    test_instance.init = (cb) ->
+      callhistory.push(
+        fn: "init"
+        env: { cb: cb }
+        name: "fuse call"
+        this: @
+        time: microtime.now()
+        args: arguments
+        testnum: test_counter
+      )
+      throw Error "Unexpected exception."
+
+    try
+      time.before_mounting_unexistant_looproot = microtime.now()
+      fuse.mount mountpoint, test_instance, (err) ->
+        expectations["init exceptions are not catchable"] = false if err?
+        expect(arguments.length).toBe(1)
+        expect(err).toBe(undefined)
+    catch err
+      expectations["init exceptions are not catchable"] = false
+
+    setTimeout(
+      -> 
+        process.removeListener('uncaughtException', uncaught_handler)
+        forced_lazy_umount(done)
+        time.after_mounting_unexistant_looproot = microtime.now()
+      3000
+    )
+
+####################################################################################################
+####################################################################################################
   it "meets all the expectations precisely", ->
+
+    expectations["init exceptions are not catchable"] = do ->
+      unless expectations["init exceptions are not catchable"]?
+        return callhistory.some (call) ->
+          call.name is "uncaughtException" &&
+          call.time < time.after_mounting_unexistant_looproot &&
+          call.time > time.before_mounting_unexistant_looproot &&
+          call.env.err.message is "Unexpected exception."
 
     expectations["init is called prior to all other functions"] = do ->
       init_register = []
@@ -502,7 +572,8 @@ describe "Fuse-bindings loopback read-write filesystem implementation", ->
       #{REFGEN("init is called prior to all other functions","Called on filesystem initialization, \
       prior to all other functions")} #{REFGEN("init is called only 1 time per each mount","Called \
       only one time per each mount")} #{REFGEN("init always accept only 1 argument","Always accepts \
-      only one input argument")}
+      only one input argument")} #{REFGEN("init exceptions are not catchable","There is no way to \
+      catch an error throwed inside the init code")}
 
       **Parameters:**  
       `cb` Callback to call after the function done it's work.

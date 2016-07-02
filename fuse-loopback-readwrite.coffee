@@ -20,7 +20,6 @@ module.exports = ({
   root = root.replace(/\/+$/,"") # Ensure there would be no trailing slash.
 
   init: (cb) ->
-    # Ensure root is an existing directory.
     cb()
 
   readdir: (path, cb) ->
