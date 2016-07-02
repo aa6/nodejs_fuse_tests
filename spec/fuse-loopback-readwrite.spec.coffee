@@ -573,7 +573,7 @@ describe "Fuse-bindings loopback read-write filesystem implementation", ->
       prior to all other functions")} #{REFGEN("init is called only 1 time per each mount","Called \
       only one time per each mount")} #{REFGEN("init always accept only 1 argument","Always accepts \
       only one input argument")} #{REFGEN("init exceptions are not catchable","There is no way to \
-      catch an error throwed inside the init code")}
+      catch an exception thrown inside the init code")}
 
       **Parameters:**  
       `cb` Callback to call after the function done it's work.
