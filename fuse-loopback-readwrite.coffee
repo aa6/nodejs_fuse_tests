@@ -3,14 +3,16 @@
 # Functions enough to implement read-only filesystem:
 # - readdir(path,cb)
 node_open_modes = 
-  'r'  : 0b00000000000000001000000000000000
-  'r+' : 0b00000000000000001000000000000010
-  'rs' : 0b00000000000000001001000000000000
-  'rs+': 0b00000000000000001001000000000010
-  'w'  : 0b00000000000000001000000000000001
-  'w+' : 0b00000000000000001000000000000010
-  'a'  : 0b00000000000000001000010000000001
-  'a+' : 0b00000000000000001000010000000010
+[
+  { mode: 'rs+' , value: 0b00000000000000001001000000000010 }
+  { mode: 'rs'  , value: 0b00000000000000001001000000000000 }
+  { mode: 'a+'  , value: 0b00000000000000001000010000000010 }
+  { mode: 'a'   , value: 0b00000000000000001000010000000001 }
+  { mode: 'w+'  , value: 0b00000000000000001000000000000010 }
+  { mode: 'r+'  , value: 0b00000000000000001000000000000010 }
+  { mode: 'w'   , value: 0b00000000000000001000000000000001 }
+  { mode: 'r'   , value: 0b00000000000000001000000000000000 }
+]
 
 module.exports = ({
   root
@@ -20,9 +22,11 @@ module.exports = ({
   root = root.replace(/\/+$/,"") # Ensure there would be no trailing slash.
 
   init: (cb) ->
+    # console.log "init", arguments
     cb()
 
   getattr: (path, cb) ->
+    # console.log "getattr", arguments
     fs.lstat (root + path), (err, result) ->
       switch
         when !err
@@ -33,6 +37,7 @@ module.exports = ({
           throw err
 
   readdir: (path, cb) ->
+    # console.log "readdir", arguments
     fs.readdir (root + path), (err, result) ->
       switch
         when !err
@@ -42,9 +47,17 @@ module.exports = ({
         else
           throw err
 
+  create: (path, mode, cb) ->
+    # console.log "create", arguments
+    fs.open root + path, "w", (err, result_fd) ->
+      fs.fchmod result_fd, mode, ->
+        fds[return_fd = ++fds.counter] = result_fd
+        cb(0,return_fd)
+
   open: (path, flags, cb) ->
-    mode = do -> for node_mode, node_flags of node_open_modes
-      return node_mode if (flags & node_flags) is node_flags
+    # console.log "open", arguments
+    mode = do -> for node_mode in node_open_modes
+      return node_mode.mode if (flags & node_mode.value) is node_mode.value
     cb(fuse.ENOSYS) unless mode?
     fs.open root + path, mode, (err, result_fd) ->
       fds[return_fd = ++fds.counter] = result_fd
@@ -56,7 +69,30 @@ module.exports = ({
         else
           throw err
 
+  write: (path, fd, buffer, length, position, cb) ->
+    # console.log "write", arguments
+    # console.log "fds fd", fds[fd]
+    fs.write fds[fd], buffer, 0, length, position, (err, written, buffer) ->
+      switch
+        when !err
+          cb(written)
+        else
+          cb(0)
+
+  destroy: (cb) ->
+    # console.log "destroy", arguments
+    cb(0)
+
+  release: (path, fd, cb) ->
+    # console.log "release", arguments
+    cb(0)
+
+  releasedir: (path, fd, cb) ->
+    # console.log "releasedir", arguments
+    cb(0)
+
   read: (path, fd, buf, len, pos, cb) ->
+    # console.log "read", arguments
     fs.read fds[fd], buf, 0, len, pos, (err, bytes_read, buf) ->
       switch
         when !err
@@ -65,6 +101,7 @@ module.exports = ({
           cb(0)
 
   fsync: (path, fd, datasync, cb) ->
+    # console.log "fsync", arguments
     fs.fsync fds[fd], (err) ->
       switch
         when !err
@@ -75,7 +112,9 @@ module.exports = ({
           throw err
 
   truncate: (path, len, cb) ->
-    fs.truncate path, len, (err) ->
+    # console.log "truncate", arguments
+    fs.truncate root + path, len, (err) ->
+      console.log arguments
       switch
         when !err
           cb(0)
@@ -84,17 +123,19 @@ module.exports = ({
         else
           throw err
 
-  ftruncate: (path, fd, size, cb) ->
-    fs.ftruncate fds[fd], len, (err) ->
-      switch
-        when !err
-          cb(0)
-        when fuse[err.code]?
-          cb(fuse[err.code])
-        else
-          throw err
+  # ftruncate: (path, fd, size, cb) ->
+  #   console.log "ftruncate", arguments
+  #   fs.ftruncate fds[fd], len, (err) ->
+  #     switch
+  #       when !err
+  #         cb(0)
+  #       when fuse[err.code]?
+  #         cb(fuse[err.code])
+  #       else
+  #         throw err
 
   readlink: (path, cb) ->
+    # console.log "readlink", arguments
     fs.readlink path, (err, result) ->
       switch
         when !err
@@ -105,6 +146,7 @@ module.exports = ({
           throw err
 
   chown: (path, uid, gid, cb) ->
+    # console.log "chown", arguments
     fs.chown path, uid, gid, (err) ->
       switch
         when !err
@@ -113,6 +155,7 @@ module.exports = ({
           cb(0)
 
   chmod: (path, mode, cb) ->
+    # console.log "chmod", arguments
     fs.chmod path, mode, (err) ->
       switch
         when !err
@@ -120,15 +163,8 @@ module.exports = ({
         else
           cb(0)
 
-  write: (path, fd, buffer, length, position, cb) ->
-    fs.write fds[fd], buffer, length, position, (err, written, buffer) ->
-      switch
-        when !err
-          cb(written)
-        else
-          cb(0)
-
   utimens: (path, atime, mtime, cb) ->
+    # console.log "utimens", arguments
     fs.utimes path, atime, mtime, (err) ->
       switch
         when !err
@@ -139,6 +175,7 @@ module.exports = ({
           throw err
 
   unlink: (path, cb) ->
+    # console.log "unlink", arguments
     fs.unlink path, (err) ->
       switch
         when !err
@@ -149,6 +186,7 @@ module.exports = ({
           throw err      
 
   rename: (src, dest, cb) ->
+    # console.log "rename", arguments
     fs.rename src, dest, (err) ->
       switch
         when !err
@@ -160,6 +198,7 @@ module.exports = ({
 
   # Creates hard link.
   link: (src, dest, cb) ->
+    # console.log "link", arguments
     fs.link src, dest, (err) ->
       switch
         when !err
@@ -170,6 +209,7 @@ module.exports = ({
           throw err   
 
   symlink: (src, dest, cb) ->
+    # console.log "symlink", arguments
     fs.symlink src, dest, (err) ->
       switch
         when !err
@@ -180,6 +220,7 @@ module.exports = ({
           throw err   
 
   mkdir: (path, mode, cb) ->
+    # console.log "mkdir", arguments
     fs.mkdir path, mode, (err) ->
       switch
         when !err
@@ -190,6 +231,7 @@ module.exports = ({
           throw err  
           
   rmdir: (path, cb) ->
+    # console.log "rmdir", arguments
     fs.rmdir path, (err) ->
       switch
         when !err

@@ -432,6 +432,17 @@ describe "Fuse-bindings loopback read-write filesystem implementation", ->
 
 ####################################################################################################
 ####################################################################################################
+  it "writes the file to looproot", (done) -> default_mount_wrapper done, (done) ->
+
+    filename = "writable_file.txt"
+    filedata = "Hello.\nI'm a writable file."
+    fs.writeFile "#{mountpoint}/#{filename}", filedata, (err) ->
+      expect(err).toBe(null)
+      expect(fs.readFileSync("#{looproot}/#{filename}").toString()).toBe(filedata)
+      done()
+
+####################################################################################################
+####################################################################################################
   it "meets all the expectations precisely", ->
 
     expectations["init exceptions are not catchable"] = do ->
@@ -720,6 +731,9 @@ describe "Fuse-bindings loopback read-write filesystem implementation", ->
       #console.dir generate_formatted_description()
       console.log "---------"
       console.log generate_formatted_description()
+
+    if process.env.NODE_ENV is "savetext"
+      fs.writeFileSync("./fuse-loopback-readwrite.md",generate_formatted_description())
 
     expect(
       generate_formatted_description() is preformatted_description
