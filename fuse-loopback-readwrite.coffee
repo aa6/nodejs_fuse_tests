@@ -22,16 +22,6 @@ module.exports = ({
   init: (cb) ->
     cb()
 
-  readdir: (path, cb) ->
-    fs.readdir (root + path), (err, result) ->
-      switch
-        when !err
-          cb(0,result)
-        when fuse[err.code]?
-          cb(fuse[err.code])
-        else
-          throw err
-
   getattr: (path, cb) ->
     fs.lstat (root + path), (err, result) ->
       switch
@@ -42,8 +32,8 @@ module.exports = ({
         else
           throw err
 
-  fgetattr: (path, fd, cb) ->
-    fs.fstat fds[fd], (err, result) ->
+  readdir: (path, cb) ->
+    fs.readdir (root + path), (err, result) ->
       switch
         when !err
           cb(0,result)
@@ -54,9 +44,9 @@ module.exports = ({
 
   open: (path, flags, cb) ->
     mode = do -> for node_mode, node_flags of node_open_modes
-      return node_mode if flags & node_flags is node_flags
+      return node_mode if (flags & node_flags) is node_flags
     cb(fuse.ENOSYS) unless mode?
-    fs.open path, mode, (err, result_fd) ->
+    fs.open root + path, mode, (err, result_fd) ->
       fds[return_fd = ++fds.counter] = result_fd
       switch
         when !err
@@ -67,7 +57,7 @@ module.exports = ({
           throw err
 
   read: (path, fd, buf, len, pos, cb) ->
-    fs.read fds[fd], buf, len, pos, (err, bytes_read, buf) ->
+    fs.read fds[fd], buf, 0, len, pos, (err, bytes_read, buf) ->
       switch
         when !err
           cb(bytes_read)

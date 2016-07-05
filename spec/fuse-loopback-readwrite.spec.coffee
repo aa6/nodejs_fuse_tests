@@ -7,9 +7,10 @@
 ####################################################################################################
 describe "Fuse-bindings loopback read-write filesystem implementation", ->
   time = {}
+  datadir = if process.env.DATADIR then process.env.DATADIR else "data"
   testname = path.basename(path.basename(__filename,".coffee"),".spec")
-  looproot = "data/#{testname}-looproot"
-  mountpoint = "data/#{testname}-mountpoint"
+  looproot = "#{datadir}/#{testname}-looproot"
+  mountpoint = "#{datadir}/#{testname}-mountpoint"
   expectations =
     "all expectations are expected to be true"                                : true
     "init exceptions are not catchable"                                       : undefined
@@ -419,6 +420,18 @@ describe "Fuse-bindings loopback read-write filesystem implementation", ->
 
 ####################################################################################################
 ####################################################################################################
+  it "reads the file from looproot", (done) -> default_mount_wrapper done, (done) ->
+
+    filename = "readable_file.txt"
+    filedata = "Hello.\nI'm a readable file."
+    fs.writeFileSync("#{looproot}/#{filename}", filedata)
+    fs.readFile "#{mountpoint}/#{filename}", (err, data) ->
+      expect(err).toBe(null)
+      expect(data.toString()).toBe(filedata)
+      done()
+
+####################################################################################################
+####################################################################################################
   it "meets all the expectations precisely", ->
 
     expectations["init exceptions are not catchable"] = do ->
@@ -694,7 +707,7 @@ describe "Fuse-bindings loopback read-write filesystem implementation", ->
       "Readdir will return empty array if `entries_array` passed to `cb` is null or undefined")}
 
       ### create(path, mode, cb)
-      Called when a new file is being opened. And what it is supposed to do????
+      Called when a new file is being opened. And what it is supposed to do???
 
       **Parameters:**  
 
