@@ -443,6 +443,145 @@ describe "Fuse-bindings loopback read-write filesystem implementation", ->
 
 ####################################################################################################
 ####################################################################################################
+  it "can overwrite existing files", (done) -> default_mount_wrapper done, (done) ->
+
+    filename = "overwritable_file.txt"
+    filedata = "Hello.\nI'm an overwritable file."
+    filedatanew = "Hello.\nI'm an OVERWRITED file."
+    fs.writeFileSync("#{looproot}/#{filename}", filedata)
+    fs.readFile "#{mountpoint}/#{filename}", (err, data) ->
+      expect(err).toBe(null)
+      expect(data.toString()).toBe(filedata)
+      fs.writeFile "#{mountpoint}/#{filename}", filedatanew, (err) ->
+        expect(err).toBe(null)
+        expect(fs.readFileSync("#{looproot}/#{filename}").toString()).toBe(filedatanew)
+        done()
+
+####################################################################################################
+####################################################################################################
+  it "can truncate files", (done) -> default_mount_wrapper done, (done) ->
+
+    filename = "truncable_file.txt"
+    filedata = "Hello.\nI'm a truncable file."
+    fs.writeFileSync("#{looproot}/#{filename}", filedata)
+    expect(fs.readFileSync("#{looproot}/#{filename}").toString()).toBe(filedata)
+    fs.truncate "#{mountpoint}/#{filename}", 4, (err) ->
+      expect(err).toBe(null)
+      expect(fs.readFileSync("#{looproot}/#{filename}").toString()).toBe("Hell")
+      done()
+
+####################################################################################################
+####################################################################################################
+  it "can remove files", (done) -> default_mount_wrapper done, (done) ->
+
+    filename = "newfile2236"
+    fs.lstat "#{looproot}/#{filename}", (err, stats) ->
+      expect(err.code).toBe("ENOENT")
+      fs.writeFile "#{mountpoint}/#{filename}", "test", (err) ->
+        expect(err).toBe(null)
+        fs.lstat "#{looproot}/#{filename}", (err, stats) ->
+          expect(err).toBe(null)
+          expect(stats.mode).toBe(33204)
+          fs.unlink "#{mountpoint}/#{filename}", (err) ->
+            expect(err).toBe(null)
+            fs.lstat "#{looproot}/#{filename}", (err, stats) ->
+              expect(err.code).toBe("ENOENT")
+              done()
+
+####################################################################################################
+####################################################################################################
+  it "can chmod files", (done) -> default_mount_wrapper done, (done) ->
+
+    filename = "chmod_file.txt"
+    filedata = "Hello.\nI'm a chmod file."
+    fs.writeFile "#{mountpoint}/#{filename}", filedata, (err) ->
+      expect(err).toBe(null)
+      expect(fs.readFileSync("#{looproot}/#{filename}").toString()).toBe(filedata)
+      fs.lstat "#{looproot}/#{filename}", (err, stats) ->
+        expect(err).toBe(null)
+        expect(stats.mode).toBe(33204)
+        fs.chmod "#{mountpoint}/#{filename}", 0o777, (err) ->
+          expect(err).toBe(null)
+          fs.lstat "#{looproot}/#{filename}", (err, stats) ->
+            expect(err).toBe(null)
+            expect(stats.mode).toBe(33279)
+            done()
+
+####################################################################################################
+####################################################################################################
+  it "can move files", (done) -> default_mount_wrapper done, (done) ->
+
+    filenamesrc = "move_src.txt"
+    filenamedst = "move_dst.txt"
+    filedata = "Hello.\nI'm a moved file."
+    fs.writeFileSync("#{looproot}/#{filenamesrc}", filedata)
+    fs.lstat "#{looproot}/#{filenamesrc}", (err, stats) ->
+      expect(err).toBe(null)
+      fs.lstat "#{looproot}/#{filenamedst}", (err, stats) ->
+        expect(err.code).toBe("ENOENT")
+        fs.rename "#{mountpoint}/#{filenamesrc}", "#{mountpoint}/#{filenamedst}", (err) ->
+          expect(err).toBe(null)
+          fs.lstat "#{looproot}/#{filenamesrc}", (err, stats) ->
+            expect(err.code).toBe("ENOENT")
+            fs.lstat "#{looproot}/#{filenamedst}", (err, stats) ->
+              expect(err).toBe(null)
+              done()
+
+####################################################################################################
+####################################################################################################
+  # Suspended because requires root to chown and I don't expect running this fs as root.
+  # fit "can chown files", (done) -> default_mount_wrapper done, (done) ->
+
+  #   filename = "chown_file.txt"
+  #   filedata = "Hello.\nI'm a chown file."
+  #   fs.writeFile "#{mountpoint}/#{filename}", filedata, (err) ->
+  #     expect(err).toBe(null)
+  #     expect(fs.readFileSync("#{looproot}/#{filename}").toString()).toBe(filedata)
+  #     fs.lstat "#{looproot}/#{filename}", (err, stats) ->
+  #       expect(err).toBe(null)
+  #       expect(stats.uid).toBe(1000)
+  #       expect(stats.gid).toBe(1000)
+  #       fs.chown "#{mountpoint}/#{filename}", 1001, 1002, (err) ->
+  #         expect(err).toBe(null)
+  #         fs.lstat "#{looproot}/#{filename}", (err, stats) ->
+  #           expect(err).toBe(null)
+  #           expect(stats.uid).toBe(1001)
+  #           expect(stats.gid).toBe(1002)
+  #           console.log arguments
+  #           done()
+
+####################################################################################################
+####################################################################################################
+  it "can create directories", (done) -> default_mount_wrapper done, (done) ->
+
+    dirname = "newdir"
+    fs.mkdir "#{mountpoint}/#{dirname}", 0o660, (err) ->
+      expect(err).toBe(null)
+      fs.lstat "#{looproot}/#{dirname}", (err, stats) ->
+        expect(err).toBe(null)
+        expect(stats.mode).toBe(16816)
+        expect(stats.isDirectory()).toBe(true)
+        done()
+
+####################################################################################################
+####################################################################################################
+  it "can remove directories", (done) -> default_mount_wrapper done, (done) ->
+
+    dirname = "newdir2"
+    fs.mkdir "#{mountpoint}/#{dirname}", 0o660, (err) ->
+      expect(err).toBe(null)
+      fs.lstat "#{looproot}/#{dirname}", (err, stats) ->
+        expect(err).toBe(null)
+        expect(stats.mode).toBe(16816)
+        expect(stats.isDirectory()).toBe(true)
+        fs.rmdir "#{mountpoint}/#{dirname}",  (err) ->
+          expect(err).toBe(null)
+          fs.lstat "#{looproot}/#{dirname}", (err, stats) ->
+            expect(err.code).toBe("ENOENT")
+            done()
+
+####################################################################################################
+####################################################################################################
   it "meets all the expectations precisely", ->
 
     expectations["init exceptions are not catchable"] = do ->

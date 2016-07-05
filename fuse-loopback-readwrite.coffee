@@ -8,8 +8,7 @@ node_open_modes =
   { mode: 'rs'  , value: 0b00000000000000001001000000000000 }
   { mode: 'a+'  , value: 0b00000000000000001000010000000010 }
   { mode: 'a'   , value: 0b00000000000000001000010000000001 }
-  { mode: 'w+'  , value: 0b00000000000000001000000000000010 }
-  { mode: 'r+'  , value: 0b00000000000000001000000000000010 }
+  { mode: 'r+'  , value: 0b00000000000000001000000000000010 } # w+ is a sad joke
   { mode: 'w'   , value: 0b00000000000000001000000000000001 }
   { mode: 'r'   , value: 0b00000000000000001000000000000000 }
 ]
@@ -112,9 +111,8 @@ module.exports = ({
           throw err
 
   truncate: (path, len, cb) ->
-    # console.log "truncate", arguments
+    #console.log "truncate", arguments
     fs.truncate root + path, len, (err) ->
-      console.log arguments
       switch
         when !err
           cb(0)
@@ -123,16 +121,95 @@ module.exports = ({
         else
           throw err
 
-  # ftruncate: (path, fd, size, cb) ->
-  #   console.log "ftruncate", arguments
-  #   fs.ftruncate fds[fd], len, (err) ->
-  #     switch
-  #       when !err
-  #         cb(0)
-  #       when fuse[err.code]?
-  #         cb(fuse[err.code])
-  #       else
-  #         throw err
+  ftruncate: (path, fd, len, cb) ->
+    #console.log "ftruncate", arguments
+    fs.ftruncate fds[fd], len, (err) ->
+      switch
+        when !err
+          cb(0)
+        when fuse[err.code]?
+          cb(fuse[err.code])
+        else
+          throw err
+
+  unlink: (path, cb) ->
+    # console.log "unlink", arguments
+    fs.unlink root + path, (err) ->
+      switch
+        when !err
+          cb(0)
+        when fuse[err.code]?
+          cb(fuse[err.code])
+        else
+          throw err    
+
+  mkdir: (path, mode, cb) ->
+    # console.log "mkdir", arguments
+    fs.mkdir root + path, mode, (err) ->
+      switch
+        when !err
+          cb(0)
+        when fuse[err.code]?
+          cb(fuse[err.code])
+        else
+          throw err  
+          
+  rmdir: (path, cb) ->
+    # console.log "rmdir", arguments
+    fs.rmdir root + path, (err) ->
+      switch
+        when !err
+          cb(0)
+        when fuse[err.code]?
+          cb(fuse[err.code])
+        else
+          throw err  
+
+  chown: (path, uid, gid, cb) ->
+    fs.chown root + path, uid, gid, (err) ->
+      switch
+        when !err
+          cb(bytes_read)
+        else
+          cb(0)
+
+  chmod: (path, mode, cb) ->
+    # console.log "chmod", arguments
+    fs.chmod root + path, mode, (err) ->
+      switch
+        when !err
+          cb(0)
+        else
+          cb(fuse[err.code])
+
+  rename: (src, dest, cb) ->
+    # console.log "rename", arguments
+    fs.rename root + src, root + dest, (err) ->
+      switch
+        when !err
+          cb(0)
+        when fuse[err.code]?
+          cb(fuse[err.code])
+        else
+          throw err
+
+
+
+
+
+
+  ##########################################
+
+  symlink: (src, dest, cb) ->
+    # console.log "symlink", arguments
+    fs.symlink src, dest, (err) ->
+      switch
+        when !err
+          cb(0)
+        when fuse[err.code]?
+          cb(fuse[err.code])
+        else
+          throw err  
 
   readlink: (path, cb) ->
     # console.log "readlink", arguments
@@ -145,24 +222,6 @@ module.exports = ({
         else
           throw err
 
-  chown: (path, uid, gid, cb) ->
-    # console.log "chown", arguments
-    fs.chown path, uid, gid, (err) ->
-      switch
-        when !err
-          cb(bytes_read)
-        else
-          cb(0)
-
-  chmod: (path, mode, cb) ->
-    # console.log "chmod", arguments
-    fs.chmod path, mode, (err) ->
-      switch
-        when !err
-          cb(bytes_read)
-        else
-          cb(0)
-
   utimens: (path, atime, mtime, cb) ->
     # console.log "utimens", arguments
     fs.utimes path, atime, mtime, (err) ->
@@ -173,29 +232,7 @@ module.exports = ({
           cb(fuse[err.code])
         else
           throw err
-
-  unlink: (path, cb) ->
-    # console.log "unlink", arguments
-    fs.unlink path, (err) ->
-      switch
-        when !err
-          cb(0)
-        when fuse[err.code]?
-          cb(fuse[err.code])
-        else
-          throw err      
-
-  rename: (src, dest, cb) ->
-    # console.log "rename", arguments
-    fs.rename src, dest, (err) ->
-      switch
-        when !err
-          cb(0)
-        when fuse[err.code]?
-          cb(fuse[err.code])
-        else
-          throw err   
-
+ 
   # Creates hard link.
   link: (src, dest, cb) ->
     # console.log "link", arguments
@@ -206,40 +243,7 @@ module.exports = ({
         when fuse[err.code]?
           cb(fuse[err.code])
         else
-          throw err   
-
-  symlink: (src, dest, cb) ->
-    # console.log "symlink", arguments
-    fs.symlink src, dest, (err) ->
-      switch
-        when !err
-          cb(0)
-        when fuse[err.code]?
-          cb(fuse[err.code])
-        else
-          throw err   
-
-  mkdir: (path, mode, cb) ->
-    # console.log "mkdir", arguments
-    fs.mkdir path, mode, (err) ->
-      switch
-        when !err
-          cb(0)
-        when fuse[err.code]?
-          cb(fuse[err.code])
-        else
-          throw err  
-          
-  rmdir: (path, cb) ->
-    # console.log "rmdir", arguments
-    fs.rmdir path, (err) ->
-      switch
-        when !err
-          cb(0)
-        when fuse[err.code]?
-          cb(fuse[err.code])
-        else
-          throw err  
+          throw err    
 
 #   statfs: = (path, cb) ->
 #     console.log "statfs", arguments
