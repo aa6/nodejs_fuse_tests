@@ -222,23 +222,24 @@ module.exports = ({
 
   release: (path, fd, cb) ->
     # console.log "release", arguments
-    cb(0)
+    fs.close fds[fd], ->
+      cb(0)
 
-  releasedir: (path, fd, cb) ->
-    # console.log "releasedir", arguments
-    cb(0)
+  # releasedir: (path, fd, cb) ->
+  #   # console.log "releasedir", arguments
+  #   cb(0)
 
-  # Creates hard link.
-  link: (src, dest, cb) ->
-    # console.log "link", arguments
-    fs.link src, dest, (err) ->
-      switch
-        when !err
-          cb(0)
-        when fuse[err.code]?
-          cb(fuse[err.code])
-        else
-          throw err    
+  # # Creates hard link.
+  # link: (src, dest, cb) ->
+  #   # console.log "link", arguments
+  #   fs.link src, dest, (err) ->
+  #     switch
+  #       when !err
+  #         cb(0)
+  #       when fuse[err.code]?
+  #         cb(fuse[err.code])
+  #       else
+  #         throw err    
 
 #   statfs: = (path, cb) ->
 #     console.log "statfs", arguments
