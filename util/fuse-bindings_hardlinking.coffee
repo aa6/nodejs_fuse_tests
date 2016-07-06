@@ -4,6 +4,7 @@
 
 mountdir = process.env.MOUNTDIR ? "tmp/fuse-bindings_hardlinking_mountpoint"
 fs.ensureDirSync(mountdir)
+mountdir = fs.realpathSync(mountdir)
 
 fs_tree = 
 
