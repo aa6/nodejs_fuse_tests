@@ -21,6 +21,8 @@
     "ref": "latest",
     "jasmine": "latest",
     "fs-extra": "latest",
+    "ref-array": "latest",
+    "ref-struct": "latest",
     "coffee-line": "latest",
     "fuse-bindings": "latest",
     "coffee-script": "latest",
