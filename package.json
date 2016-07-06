@@ -17,6 +17,8 @@
   },
   "homepage": "https://github.com/aa6/nodejs_fuse_tests#readme",
   "devDependencies": {
+    "ffi": "latest",
+    "ref": "latest",
     "jasmine": "latest",
     "fs-extra": "latest",
     "coffee-line": "latest",
