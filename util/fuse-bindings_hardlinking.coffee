@@ -32,7 +32,7 @@ fs_instance =
 
   readdir: (path, cb) ->
     console.log "readdir", arguments
-    cb(0, (key for key of fs_tree when key.indexOf(path) is 0))
+    cb(0, (key for key of fs_tree when key isnt path && key.indexOf(path) is 0))
 
   getattr: (path, cb) ->
     console.log "getattr", arguments
