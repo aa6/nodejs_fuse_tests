@@ -427,7 +427,7 @@ describe "Fuse-bindings loopback read-write filesystem implementation", ->
     fs.writeFileSync("#{looproot}/#{filename}", filedata)
     fs.readFile "#{mountpoint}/#{filename}", (err, data) ->
       expect(err).toBe(null)
-      expect(data.toString()).toBe(filedata)
+      expect(data.toString()).toBe(filedata + "")
       done()
 
 ####################################################################################################
@@ -451,7 +451,7 @@ describe "Fuse-bindings loopback read-write filesystem implementation", ->
     fs.writeFileSync("#{looproot}/#{filename}", filedata)
     fs.readFile "#{mountpoint}/#{filename}", (err, data) ->
       expect(err).toBe(null)
-      expect(data.toString()).toBe(filedata)
+      expect(data.toString()).toBe(filedata + ""+ "")
       fs.writeFile "#{mountpoint}/#{filename}", filedatanew, (err) ->
         expect(err).toBe(null)
         expect(fs.readFileSync("#{looproot}/#{filename}").toString()).toBe(filedatanew)
@@ -529,26 +529,41 @@ describe "Fuse-bindings loopback read-write filesystem implementation", ->
 
 ####################################################################################################
 ####################################################################################################
-  # Suspended because requires root to chown and I don't expect running this fs as root.
-  # fit "can chown files", (done) -> default_mount_wrapper done, (done) ->
+  it "can create and read symlinks", (done) -> default_mount_wrapper done, (done) ->
 
-  #   filename = "chown_file.txt"
-  #   filedata = "Hello.\nI'm a chown file."
-  #   fs.writeFile "#{mountpoint}/#{filename}", filedata, (err) ->
-  #     expect(err).toBe(null)
-  #     expect(fs.readFileSync("#{looproot}/#{filename}").toString()).toBe(filedata)
-  #     fs.lstat "#{looproot}/#{filename}", (err, stats) ->
-  #       expect(err).toBe(null)
-  #       expect(stats.uid).toBe(1000)
-  #       expect(stats.gid).toBe(1000)
-  #       fs.chown "#{mountpoint}/#{filename}", 1001, 1002, (err) ->
-  #         expect(err).toBe(null)
-  #         fs.lstat "#{looproot}/#{filename}", (err, stats) ->
-  #           expect(err).toBe(null)
-  #           expect(stats.uid).toBe(1001)
-  #           expect(stats.gid).toBe(1002)
-  #           console.log arguments
-  #           done()
+    filename = "symlink_target_file.txt"
+    filedata = "Hello.\nI'm a symlink target file."
+    symlinkname = "symlink.txt"
+    # Relative mountpoint symlink will be treated as relative to looproot. Thus we need to realpath
+    # mountpoint to avoid this caveat.
+    fs.realpath mountpoint, (err, path) ->
+      expect(err).toBe(null)
+      realmounptoint = path 
+      fs.writeFileSync("#{looproot}/#{filename}", filedata)
+      fs.symlink "#{realmounptoint}/#{filename}", "#{mountpoint}/#{symlinkname}", (err) ->
+        expect(err).toBe(null)
+        fs.readFile "#{mountpoint}/#{symlinkname}", (err, data) ->
+          expect(err).toBe(null)
+          expect(data.toString()).toBe(""+filedata+"")
+          done()
+
+# ####################################################################################################
+# ####################################################################################################
+  it "can create and read relative symlinks", (done) -> default_mount_wrapper done, (done) ->
+
+    filename = "symlink_relative_target_file.txt"
+    filedata = "Hello.\nI'm a symlink relative target file."
+    dirname = "relcontainer"
+    symlinkname = "/symlinkrel.txt"
+    symlinktarget = "../symlink_relative_target_file.txt"
+    fs.writeFileSync("#{looproot}/#{filename}", filedata)
+    fs.mkdirSync("#{looproot}/#{dirname}")
+    fs.symlink symlinktarget, "#{mountpoint}/#{dirname}/#{symlinkname}", (err) ->
+      expect(err).toBe(null)
+      fs.readFile "#{mountpoint}/#{dirname}/#{symlinkname}", (err, data) ->
+        expect(err).toBe(null)
+        expect(data.toString()).toBe(""+filedata+"")
+        done()
 
 ####################################################################################################
 ####################################################################################################
@@ -579,6 +594,55 @@ describe "Fuse-bindings loopback read-write filesystem implementation", ->
           fs.lstat "#{looproot}/#{dirname}", (err, stats) ->
             expect(err.code).toBe("ENOENT")
             done()
+
+####################################################################################################
+####################################################################################################
+  it "can utimes files", (done) -> default_mount_wrapper done, (done) ->
+
+    filename = "utimes_file.txt"
+    filedata = "Hello.\nI'm an utimes file."
+    fs.writeFileSync("#{looproot}/#{filename}", filedata)
+    fs.readFile "#{mountpoint}/#{filename}", (err, data) ->
+      expect(err).toBe(null)
+      expect(data.toString()).toBe(""+filedata)
+      fs.lstat "#{looproot}/#{filename}", (err, stats) ->
+        [ oldatime, oldmtime ] = [ +stats.atime, +stats.mtime ]
+        [ newatime, newmtime ] = [ 
+          new Date((Math.round(oldatime / 1000) * 1000) - 10000) # Drop ms as they're not considered
+          new Date((Math.round(oldmtime / 1000) * 1000) - 10000) # Drop ms as they're not considered
+        ]
+        fs.utimes "#{mountpoint}/#{filename}", newatime, newmtime, (err) ->
+          expect(err).toBe(undefined)
+          fs.lstat "#{looproot}/#{filename}", (err, stats) ->
+            expect(+stats.atime).toBe(+newatime)
+            expect(+stats.mtime).toBe(+newmtime)
+            expect(+stats.atime).not.toBe(oldatime)
+            expect(+stats.mtime).not.toBe(oldmtime)
+            done()
+    
+
+####################################################################################################
+####################################################################################################
+  # Suspended because requires root to chown and I don't expect running this fs as root.
+  # fit "can chown files", (done) -> default_mount_wrapper done, (done) ->
+
+  #   filename = "chown_file.txt"
+  #   filedata = "Hello.\nI'm a chown file."
+  #   fs.writeFile "#{mountpoint}/#{filename}", filedata, (err) ->
+  #     expect(err).toBe(null)
+  #     expect(fs.readFileSync("#{looproot}/#{filename}").toString()).toBe(filedata)
+  #     fs.lstat "#{looproot}/#{filename}", (err, stats) ->
+  #       expect(err).toBe(null)
+  #       expect(stats.uid).toBe(1000)
+  #       expect(stats.gid).toBe(1000)
+  #       fs.chown "#{mountpoint}/#{filename}", 1001, 1002, (err) ->
+  #         expect(err).toBe(null)
+  #         fs.lstat "#{looproot}/#{filename}", (err, stats) ->
+  #           expect(err).toBe(null)
+  #           expect(stats.uid).toBe(1001)
+  #           expect(stats.gid).toBe(1002)
+  #           console.log arguments
+  #           done()
 
 ####################################################################################################
 ####################################################################################################

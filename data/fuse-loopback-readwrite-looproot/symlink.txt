@@ -1,0 +1,1 @@
+/home/me/tst/nodejs_fuse_tests/data/fuse-loopback-readwrite-mountpoint/symlink_target_file.txt

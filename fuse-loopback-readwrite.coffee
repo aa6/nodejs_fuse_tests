@@ -21,11 +21,14 @@ module.exports = ({
   root = root.replace(/\/+$/,"") # Ensure there would be no trailing slash.
 
   init: (cb) ->
-    # console.log "init", arguments
+    #console.log "init", arguments
+    #console.log "root", root
+    # fs.realpath root, (err, path) ->
+    #  root = path # Required for symlinks to work properly.
     cb()
 
   getattr: (path, cb) ->
-    # console.log "getattr", arguments
+    #console.log "getattr", arguments
     fs.lstat (root + path), (err, result) ->
       switch
         when !err
@@ -78,20 +81,8 @@ module.exports = ({
         else
           cb(0)
 
-  destroy: (cb) ->
-    # console.log "destroy", arguments
-    cb(0)
-
-  release: (path, fd, cb) ->
-    # console.log "release", arguments
-    cb(0)
-
-  releasedir: (path, fd, cb) ->
-    # console.log "releasedir", arguments
-    cb(0)
-
   read: (path, fd, buf, len, pos, cb) ->
-    # console.log "read", arguments
+    #console.log "read", arguments
     fs.read fds[fd], buf, 0, len, pos, (err, bytes_read, buf) ->
       switch
         when !err
@@ -193,16 +184,9 @@ module.exports = ({
         else
           throw err
 
-
-
-
-
-
-  ##########################################
-
   symlink: (src, dest, cb) ->
-    # console.log "symlink", arguments
-    fs.symlink src, dest, (err) ->
+    #console.log "symlink", arguments
+    fs.symlink src, root + dest, (err) ->
       switch
         when !err
           cb(0)
@@ -212,8 +196,9 @@ module.exports = ({
           throw err  
 
   readlink: (path, cb) ->
-    # console.log "readlink", arguments
-    fs.readlink path, (err, result) ->
+    #console.log "readlink", arguments
+    fs.readlink root + path, (err, result) ->
+      #console.log "readlink-res", result
       switch
         when !err
           cb(0,result)
@@ -224,7 +209,7 @@ module.exports = ({
 
   utimens: (path, atime, mtime, cb) ->
     # console.log "utimens", arguments
-    fs.utimes path, atime, mtime, (err) ->
+    fs.utimes root + path, atime, mtime, (err) ->
       switch
         when !err
           cb(0)
@@ -232,7 +217,17 @@ module.exports = ({
           cb(fuse[err.code])
         else
           throw err
- 
+
+  ##########################################
+
+  release: (path, fd, cb) ->
+    # console.log "release", arguments
+    cb(0)
+
+  releasedir: (path, fd, cb) ->
+    # console.log "releasedir", arguments
+    cb(0)
+
   # Creates hard link.
   link: (src, dest, cb) ->
     # console.log "link", arguments

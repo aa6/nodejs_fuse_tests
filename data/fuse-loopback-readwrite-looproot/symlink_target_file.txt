@@ -1,0 +1,2 @@
+Hello.
+I'm a symlink target file.
