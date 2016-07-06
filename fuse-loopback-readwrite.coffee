@@ -1,4 +1,6 @@
-[ fs,fuse ] = [ (require "fs"),(require "fuse-bindings") ]  
+[ fs, fuse, ffi, ref ] = [
+  (require "fs"),(require "fuse-bindings"),(require "ffi"),(require "ref")
+]  
 
 # Functions enough to implement read-only filesystem:
 # - readdir(path,cb)
@@ -8,7 +10,7 @@ node_open_modes =
   { mode: 'rs'  , value: 0b00000000000000001001000000000000 }
   { mode: 'a+'  , value: 0b00000000000000001000010000000010 }
   { mode: 'a'   , value: 0b00000000000000001000010000000001 }
-  { mode: 'r+'  , value: 0b00000000000000001000000000000010 } # w+ is a sad joke
+  { mode: 'r+'  , value: 0b00000000000000001000000000000010 } # w+ is unsuitable
   { mode: 'w'   , value: 0b00000000000000001000000000000001 }
   { mode: 'r'   , value: 0b00000000000000001000000000000000 }
 ]
@@ -22,9 +24,6 @@ module.exports = ({
 
   init: (cb) ->
     #console.log "init", arguments
-    #console.log "root", root
-    # fs.realpath root, (err, path) ->
-    #  root = path # Required for symlinks to work properly.
     cb()
 
   getattr: (path, cb) ->
@@ -218,16 +217,30 @@ module.exports = ({
         else
           throw err
 
-  ##########################################
-
   release: (path, fd, cb) ->
     # console.log "release", arguments
     fs.close fds[fd], ->
       cb(0)
 
-  # releasedir: (path, fd, cb) ->
-  #   # console.log "releasedir", arguments
-  #   cb(0)
+  statfs: (path, cb) ->
+    #console.log "statfs", arguments
+    fetch_disk_info root, (err, info) ->
+      cb(
+        0,
+        bsize:    info.f_bsize
+        frsize:   info.f_frsize
+        blocks:   info.f_blocks
+        bfree:    info.f_bfree
+        bavail:   info.f_bavail
+        files:    info.f_files
+        ffree:    info.f_ffree
+        favail:   info.f_favail
+        fsid:     info.f_fsid
+        flag:     info.f_flag
+        namemax:  info.f_namemax
+      )
+
+  ##########################################
 
   # # Creates hard link.
   # link: (src, dest, cb) ->
@@ -241,19 +254,33 @@ module.exports = ({
   #       else
   #         throw err    
 
-#   statfs: = (path, cb) ->
-#     console.log "statfs", arguments
-#     cb(0, {
-#       bsize: 1000000,
-#       frsize: 1000000,
-#       blocks: 1000000,
-#       bfree: 1000000,
-#       bavail: 1000000,
-#       files: 1000000,
-#       ffree: 1000000,
-#       favail: 1000000,
-#       fsid: 1000000,
-#       flag: 1000000,
-#       namemax: 1000000
-#     })
-#   }
+
+fetch_disk_info = do -> 
+
+  Struct = require "ref-struct"
+  ArrayType = require "ref-array"
+  statvfs_t = Struct(
+    f_bsize:    ref.types.ulong                 # fundamental file system block size
+    f_frsize:   ref.types.ulong                 # fragment size
+    f_blocks:   ref.types.ulong                 # total blocks of f_frsize on fs
+    f_bfree:    ref.types.ulong                 # total free blocks of f_frsize
+    f_bavail:   ref.types.ulong                 # free blocks avail to non-superuser
+    f_files:    ref.types.ulong                 # total file nodes (inodes)
+    f_ffree:    ref.types.ulong                 # total free file nodes
+    f_favail:   ref.types.ulong                 # free nodes avail to non-superuser
+    f_fsid:     ref.types.ulong                 # file system id (dev for now)
+    f_basetype: ArrayType(ref.types.char, 16)   # target fs type name, null-terminated
+    f_flag:     ref.types.ulong                 # bit-mask of flags
+    f_namemax:  ref.types.ulong                 # maximum file name length
+    f_fstr:     ArrayType(ref.types.char, 32)   # filesystem-specific string
+    f_filler:   ArrayType(ref.types.ulong, 16)  # reserved for future expansion
+  )
+  DiskApi = ffi.Library(null, statvfs: ['int',['string',ref.refType(statvfs_t)]])
+
+  return (drive, callback) ->
+    statvfs = new statvfs_t()
+    returnCode = DiskApi.statvfs(drive, statvfs.ref())
+    if returnCode
+      callback(returnCode, undefined)
+    else 
+      callback(undefined, statvfs)

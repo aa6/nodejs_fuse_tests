@@ -619,7 +619,15 @@ describe "Fuse-bindings loopback read-write filesystem implementation", ->
             expect(+stats.atime).not.toBe(oldatime)
             expect(+stats.mtime).not.toBe(oldmtime)
             done()
-    
+
+####################################################################################################
+####################################################################################################
+  it "can statfs", (done) -> default_mount_wrapper done, (done) ->
+
+    child_process.exec "df -h", (err, stdout, stderr) ->
+      expect(err).toBe(null)
+      expect(stderr).toBe("")
+      done()    
 
 ####################################################################################################
 ####################################################################################################
