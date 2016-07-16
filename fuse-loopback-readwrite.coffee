@@ -2,8 +2,6 @@
   (require "fs"),(require "fuse-bindings"),(require "ffi"),(require "ref")
 ]  
 
-# Functions enough to implement read-only filesystem:
-# - readdir(path,cb)
 node_open_modes = 
 [
   { mode: 'rs+' , value: 0b00000000000000001001000000000010 }
@@ -29,24 +27,18 @@ module.exports = ({
   getattr: (path, cb) ->
     #console.log "getattr", arguments
     fs.lstat (root + path), (err, result) ->
-      switch
-        when !err
-          cb(0,result)
-        when fuse[err.code]?
-          cb(fuse[err.code])
-        else
-          throw err
+      if err
+        cb(fuse[err.code] ? fuse.ENOSYS)
+      else
+        cb(0,result)
 
   readdir: (path, cb) ->
     # console.log "readdir", arguments
     fs.readdir (root + path), (err, result) ->
-      switch
-        when !err
-          cb(0,result)
-        when fuse[err.code]?
-          cb(fuse[err.code])
-        else
-          throw err
+      if err
+        cb(fuse[err.code] ? fuse.ENOSYS)
+      else
+        cb(0,result)
 
   create: (path, mode, cb) ->
     # console.log "create", arguments
@@ -62,32 +54,26 @@ module.exports = ({
     cb(fuse.ENOSYS) unless mode?
     fs.open root + path, mode, (err, result_fd) ->
       fds[return_fd = ++fds.counter] = result_fd
-      switch
-        when !err
-          cb(0,return_fd)
-        when fuse[err.code]?
-          cb(fuse[err.code])
-        else
-          throw err
+      if err
+        cb(fuse[err.code] ? fuse.ENOSYS)
+      else
+        cb(0,return_fd)
 
   write: (path, fd, buffer, length, position, cb) ->
     # console.log "write", arguments
-    # console.log "fds fd", fds[fd]
     fs.write fds[fd], buffer, 0, length, position, (err, written, buffer) ->
-      switch
-        when !err
-          cb(written)
-        else
-          cb(0)
+      if err
+        cb(0)
+      else
+        cb(written)
 
   read: (path, fd, buf, len, pos, cb) ->
     #console.log "read", arguments
     fs.read fds[fd], buf, 0, len, pos, (err, bytes_read, buf) ->
-      switch
-        when !err
-          cb(bytes_read)
-        else
-          cb(0)
+      if err
+        cb(0)
+      else
+        cb(bytes_read)
 
   fsync: (path, fd, datasync, cb) ->
     # console.log "fsync", arguments
@@ -240,8 +226,6 @@ module.exports = ({
         namemax:  info.f_namemax
       )
 
-  ##########################################
-
   # # Creates hard link.
   # link: (src, dest, cb) ->
   #   # console.log "link", arguments
@@ -252,8 +236,7 @@ module.exports = ({
   #       when fuse[err.code]?
   #         cb(fuse[err.code])
   #       else
-  #         throw err    
-
+  #         throw err
 
 fetch_disk_info = do -> 
 
