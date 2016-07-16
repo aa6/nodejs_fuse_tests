@@ -78,130 +78,98 @@ module.exports = ({
   fsync: (path, fd, datasync, cb) ->
     # console.log "fsync", arguments
     fs.fsync fds[fd], (err) ->
-      switch
-        when !err
-          cb(0)
-        when fuse[err.code]?
-          cb(fuse[err.code])
-        else
-          throw err
+      if err
+        cb(fuse[err.code] ? fuse.ENOSYS)
+      else
+        cb(0)
 
   truncate: (path, len, cb) ->
     #console.log "truncate", arguments
     fs.truncate root + path, len, (err) ->
-      switch
-        when !err
-          cb(0)
-        when fuse[err.code]?
-          cb(fuse[err.code])
-        else
-          throw err
+      if err
+        cb(fuse[err.code] ? fuse.ENOSYS)
+      else
+        cb(0)
 
   ftruncate: (path, fd, len, cb) ->
     #console.log "ftruncate", arguments
     fs.ftruncate fds[fd], len, (err) ->
-      switch
-        when !err
-          cb(0)
-        when fuse[err.code]?
-          cb(fuse[err.code])
-        else
-          throw err
+      if err
+        cb(fuse[err.code] ? fuse.ENOSYS)
+      else
+        cb(0)
 
   unlink: (path, cb) ->
     # console.log "unlink", arguments
     fs.unlink root + path, (err) ->
-      switch
-        when !err
-          cb(0)
-        when fuse[err.code]?
-          cb(fuse[err.code])
-        else
-          throw err    
+      if err
+        cb(fuse[err.code] ? fuse.ENOSYS)
+      else
+        cb(0)
 
   mkdir: (path, mode, cb) ->
     # console.log "mkdir", arguments
     fs.mkdir root + path, mode, (err) ->
-      switch
-        when !err
-          cb(0)
-        when fuse[err.code]?
-          cb(fuse[err.code])
-        else
-          throw err  
+      if err
+        cb(fuse[err.code] ? fuse.ENOSYS)
+      else
+        cb(0)
           
   rmdir: (path, cb) ->
     # console.log "rmdir", arguments
     fs.rmdir root + path, (err) ->
-      switch
-        when !err
-          cb(0)
-        when fuse[err.code]?
-          cb(fuse[err.code])
-        else
-          throw err  
+      if err
+        cb(fuse[err.code] ? fuse.ENOSYS)
+      else
+        cb(0)
 
   chown: (path, uid, gid, cb) ->
     fs.chown root + path, uid, gid, (err) ->
-      switch
-        when !err
-          cb(bytes_read)
-        else
-          cb(0)
+      if err
+        cb(fuse[err.code] ? fuse.ENOSYS)
+      else
+        cb(0)
 
   chmod: (path, mode, cb) ->
     # console.log "chmod", arguments
     fs.chmod root + path, mode, (err) ->
-      switch
-        when !err
-          cb(0)
-        else
-          cb(fuse[err.code])
+      if err
+        cb(fuse[err.code] ? fuse.ENOSYS)
+      else
+        cb(0)
 
   rename: (src, dest, cb) ->
     # console.log "rename", arguments
     fs.rename root + src, root + dest, (err) ->
-      switch
-        when !err
-          cb(0)
-        when fuse[err.code]?
-          cb(fuse[err.code])
-        else
-          throw err
+      if err
+        cb(fuse[err.code] ? fuse.ENOSYS)
+      else
+        cb(0)
 
   symlink: (src, dest, cb) ->
     #console.log "symlink", arguments
     fs.symlink src, root + dest, (err) ->
-      switch
-        when !err
-          cb(0)
-        when fuse[err.code]?
-          cb(fuse[err.code])
-        else
-          throw err  
+      if err
+        cb(fuse[err.code] ? fuse.ENOSYS)
+      else
+        cb(0)
 
   readlink: (path, cb) ->
     #console.log "readlink", arguments
     fs.readlink root + path, (err, result) ->
       #console.log "readlink-res", result
-      switch
-        when !err
-          cb(0,result)
-        when fuse[err.code]?
-          cb(fuse[err.code])
-        else
-          throw err
+      if err
+        cb(fuse[err.code] ? fuse.ENOSYS)
+      else
+        cb(0,result)
 
   utimens: (path, atime, mtime, cb) ->
     # console.log "utimens", arguments
     fs.utimes root + path, atime, mtime, (err) ->
-      switch
-        when !err
-          cb(0)
-        when fuse[err.code]?
-          cb(fuse[err.code])
-        else
-          throw err
+      if err
+        cb(fuse[err.code] ? fuse.ENOSYS)
+      else
+        cb(0)
 
   release: (path, fd, cb) ->
     # console.log "release", arguments
